@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import authPlugin from './plugins/auth.js'
 import profileRoutes from './routes/profile.js'
 import friendsRoutes from './routes/friends.js'
+import statusRoutes from './routes/status.js'
 import { prisma as defaultPrisma } from './lib/prisma.js'
 import { verifyIdToken as defaultVerifyIdToken } from './lib/firebase.js'
 
@@ -18,6 +19,7 @@ export function buildApp({ prisma = defaultPrisma, verifyIdToken = defaultVerify
       await instance.register(authPlugin)
       await instance.register(profileRoutes)
       await instance.register(friendsRoutes)
+      await instance.register(statusRoutes)
     },
     { prefix: '/api' },
   )

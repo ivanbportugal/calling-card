@@ -29,6 +29,23 @@ model User {
 
   sentFriendRequests     Friendship[] @relation("FriendshipRequester")
   receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
+  status                 UserStatus?
+}
+
+enum StatusColor {
+  GREEN
+  YELLOW
+  RED
+}
+
+model UserStatus {
+  id        String      @id @default(uuid())
+  userId    String      @unique
+  color     StatusColor
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum FriendshipStatus {

@@ -7,7 +7,10 @@ export default async function friendsRoutes(fastify) {
         status: 'ACCEPTED',
         OR: [{ requesterId: userId }, { addresseeId: userId }],
       },
-      include: { requester: true, addressee: true },
+      include: {
+        requester: { include: { status: true } },
+        addressee: { include: { status: true } },
+      },
     })
 
     return friendships.map((friendship) => {
@@ -18,6 +21,7 @@ export default async function friendsRoutes(fastify) {
         displayName: friend.displayName,
         email: friend.email,
         photoUrl: friend.photoUrl,
+        status: friend.status?.color ?? null,
       }
     })
   })
