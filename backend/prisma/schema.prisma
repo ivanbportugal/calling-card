@@ -12,10 +12,18 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  firebaseUid String   @unique
-  email       String?
-  displayName String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                   String    @id @default(uuid())
+  firebaseUid          String    @unique
+  email                String?
+  emailVerified        Boolean   @default(false)
+  phoneNumber          String?
+  displayName          String?
+  photoUrl             String?
+  signInProvider       String?
+  fcmToken             String?
+  platform             String?
+  notificationsEnabled Boolean   @default(true)
+  lastLoginAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }
