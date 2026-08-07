@@ -1,4 +1,41 @@
+function serializeUser(user) {
+  return {
+    id: user.id,
+    displayName: user.displayName,
+    email: user.email,
+    photoUrl: user.photoUrl,
+  }
+}
+
 export default async function friendRequestRoutes(fastify) {
+  fastify.get('/friends/requests', async (request) => {
+    const userId = request.user.id
+
+    const [incoming, outgoing] = await Promise.all([
+      fastify.prisma.friendship.findMany({
+        where: { addresseeId: userId, status: 'PENDING' },
+        include: { requester: true },
+      }),
+      fastify.prisma.friendship.findMany({
+        where: { requesterId: userId, status: 'PENDING' },
+        include: { addressee: true },
+      }),
+    ])
+
+    return {
+      incoming: incoming.map((f) => ({
+        id: f.id,
+        createdAt: f.createdAt,
+        user: serializeUser(f.requester),
+      })),
+      outgoing: outgoing.map((f) => ({
+        id: f.id,
+        createdAt: f.createdAt,
+        user: serializeUser(f.addressee),
+      })),
+    }
+  })
+
   fastify.post('/friends/requests', async (request, reply) => {
     const { addresseeId } = request.body ?? {}
     const requesterId = request.user.id

@@ -31,6 +31,49 @@ async function createUsers(prisma) {
   return { ana, jessica }
 }
 
+test('GET /api/friends/requests separates incoming from outgoing pending requests', async (t) => {
+  const { prisma } = testDb
+  const { ana, jessica } = await createUsers(prisma)
+  const jo = await prisma.user.create({ data: { firebaseUid: 'jo-uid', displayName: 'Jo' } })
+  const bethany = await prisma.user.create({ data: { firebaseUid: 'bethany-uid', displayName: 'Bethany' } })
+
+  // Ana -> Jessica (outgoing for Ana)
+  await prisma.friendship.create({ data: { requesterId: ana.id, addresseeId: jessica.id, status: 'PENDING' } })
+  // Jo -> Ana (incoming for Ana)
+  await prisma.friendship.create({ data: { requesterId: jo.id, addresseeId: ana.id, status: 'PENDING' } })
+  // Already-accepted friendship should not show up as a pending request
+  await prisma.friendship.create({ data: { requesterId: ana.id, addresseeId: bethany.id, status: 'ACCEPTED' } })
+
+  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'GET',
+    url: '/api/friends/requests',
+    headers: { authorization: 'Bearer ana-token' },
+  })
+
+  assert.equal(res.statusCode, 200)
+  const body = res.json()
+
+  assert.equal(body.incoming.length, 1)
+  assert.equal(body.incoming[0].user.displayName, 'Jo')
+
+  assert.equal(body.outgoing.length, 1)
+  assert.equal(body.outgoing[0].user.displayName, 'Jessica')
+})
+
+test('GET /api/friends/requests requires a Bearer token', async (t) => {
+  const app = buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({ method: 'GET', url: '/api/friends/requests' })
+
+  assert.equal(res.statusCode, 401)
+})
+
 test('POST /api/friends/requests creates a pending friend request', async (t) => {
   const { prisma } = testDb
   const { ana, jessica } = await createUsers(prisma)
