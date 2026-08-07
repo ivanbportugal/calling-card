@@ -8,3 +8,7 @@ if (!getApps().length) {
 }
 
 export const auth = getAuth()
+
+export function verifyIdToken(token) {
+  return auth.verifyIdToken(token)
+}

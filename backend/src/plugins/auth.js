@@ -1,6 +1,4 @@
 import fp from 'fastify-plugin'
-import { auth } from '../lib/firebase.js'
-import { prisma } from '../lib/prisma.js'
 
 export default fp(async (fastify) => {
   fastify.decorateRequest('user', null)
@@ -15,12 +13,12 @@ export default fp(async (fastify) => {
 
     let decoded
     try {
-      decoded = await auth.verifyIdToken(token)
+      decoded = await fastify.verifyIdToken(token)
     } catch (err) {
       return reply.code(401).send({ error: 'Invalid or expired token' })
     }
 
-    request.user = await prisma.user.upsert({
+    request.user = await fastify.prisma.user.upsert({
       where: { firebaseUid: decoded.uid },
       update: { email: decoded.email ?? undefined },
       create: { firebaseUid: decoded.uid, email: decoded.email ?? null },
