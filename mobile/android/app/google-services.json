@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "954057878633",
+    "project_id": "calling-card-1",
+    "storage_bucket": "calling-card-1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:954057878633:android:9eefc9bb228628f02dc6f8",
+        "android_client_info": {
+          "package_name": "com.callingcard.calling_card"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "954057878633-1f825an68khl4pm3u7bdsr4qt296a5c7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDR8eq13cvKw6h0c6wgtfryt97i9DIwHEA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "954057878633-1f825an68khl4pm3u7bdsr4qt296a5c7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "954057878633-dgep1u177dmhkruvm5khsm1h8406tgjj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.callingcard.callingCard"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

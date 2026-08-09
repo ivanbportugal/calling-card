@@ -1,15 +1,15 @@
+import 'package:calling_card/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'routing/router.dart';
 
-// Run `flutterfire configure` to generate firebase_options.dart, then:
-//   import 'firebase_options.dart';
-//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform
+  );
 
   runApp(const ProviderScope(child: CallingCardApp()));
 }
