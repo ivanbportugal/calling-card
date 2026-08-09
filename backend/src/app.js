@@ -39,7 +39,7 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
 
 // For serverless
 export default async function handler(req, res) {
-  const app = buildApp();
+  const app = await buildApp();
   await app.ready();
   app.server.emit('request', req, res);
 }
