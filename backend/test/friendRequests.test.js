@@ -44,7 +44,7 @@ test('GET /api/friends/requests separates incoming from outgoing pending request
   // Already-accepted friendship should not show up as a pending request
   await prisma.friendship.create({ data: { requesterId: ana.id, addresseeId: bethany.id, status: 'ACCEPTED' } })
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 
@@ -65,7 +65,7 @@ test('GET /api/friends/requests separates incoming from outgoing pending request
 })
 
 test('GET /api/friends/requests requires a Bearer token', async (t) => {
-  const app = buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
+  const app = await buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
   await app.ready()
   t.after(() => app.close())
 
@@ -78,7 +78,7 @@ test('POST /api/friends/requests creates a pending friend request', async (t) =>
   const { prisma } = testDb
   const { ana, jessica } = await createUsers(prisma)
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 
@@ -103,7 +103,7 @@ test('POST /api/friends/requests rejects sending a request to yourself', async (
   const { prisma } = testDb
   const { ana } = await createUsers(prisma)
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 
@@ -121,7 +121,7 @@ test('POST /api/friends/requests 404s when the target user does not exist', asyn
   const { prisma } = testDb
   const { ana } = await createUsers(prisma)
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 
@@ -140,7 +140,7 @@ test('POST /api/friends/requests 409s on a duplicate request in either direction
   const { ana, jessica } = await createUsers(prisma)
   await prisma.friendship.create({ data: { requesterId: ana.id, addresseeId: jessica.id, status: 'PENDING' } })
 
-  const app = buildApp({
+  const app = await buildApp({
     prisma,
     verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid, 'jessica-token': jessica.firebaseUid }),
   })
@@ -171,7 +171,7 @@ test('POST /api/friends/requests/:id/accept lets only the addressee accept, then
     data: { requesterId: ana.id, addresseeId: jessica.id, status: 'PENDING' },
   })
 
-  const app = buildApp({
+  const app = await buildApp({
     prisma,
     verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid, 'jessica-token': jessica.firebaseUid }),
   })
@@ -212,7 +212,7 @@ test('POST /api/friends/requests/:id/accept 409s when the request is already acc
     data: { requesterId: ana.id, addresseeId: jessica.id, status: 'ACCEPTED' },
   })
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'jessica-token': jessica.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'jessica-token': jessica.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 
@@ -229,7 +229,7 @@ test('POST /api/friends/requests/:id/accept 404s for an unknown request id', asy
   const { prisma } = testDb
   const { jessica } = await createUsers(prisma)
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'jessica-token': jessica.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'jessica-token': jessica.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 

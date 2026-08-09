@@ -29,7 +29,7 @@ test('POST /api/status sets and updates the caller\'s status', async (t) => {
   const { prisma } = testDb
   const ana = await prisma.user.create({ data: { firebaseUid: 'ana-uid', displayName: 'Ana' } })
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 
@@ -63,7 +63,7 @@ test('POST /api/status rejects an invalid color', async (t) => {
   const { prisma } = testDb
   const ana = await prisma.user.create({ data: { firebaseUid: 'ana-uid', displayName: 'Ana' } })
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 
@@ -78,7 +78,7 @@ test('POST /api/status rejects an invalid color', async (t) => {
 })
 
 test('POST /api/status requires a Bearer token', async (t) => {
-  const app = buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
+  const app = await buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
   await app.ready()
   t.after(() => app.close())
 
@@ -100,7 +100,7 @@ test('GET /api/friends includes each accepted friend\'s status, defaulting to nu
   await prisma.userStatus.create({ data: { userId: jessica.id, color: 'YELLOW' } })
   // Jo never set a status
 
-  const app = buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
   await app.ready()
   t.after(() => app.close())
 

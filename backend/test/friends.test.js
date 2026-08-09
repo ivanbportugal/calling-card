@@ -41,7 +41,7 @@ test('GET /api/friends returns only the caller\'s accepted friends, never a frie
   const stranger = await prisma.user.create({ data: { firebaseUid: 'stranger-uid', displayName: 'Stranger' } })
   await prisma.friendship.create({ data: { requesterId: stranger.id, addresseeId: ana.id, status: 'PENDING' } })
 
-  const app = buildApp({
+  const app = await buildApp({
     prisma,
     verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }),
   })
@@ -66,7 +66,7 @@ test('GET /api/friends returns only the caller\'s accepted friends, never a frie
 })
 
 test('GET /api/friends returns 401 without a Bearer token', async (t) => {
-  const app = buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
+  const app = await buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
   await app.ready()
   t.after(() => app.close())
 
@@ -76,7 +76,7 @@ test('GET /api/friends returns 401 without a Bearer token', async (t) => {
 })
 
 test('GET /api/friends returns 401 for an invalid token', async (t) => {
-  const app = buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
+  const app = await buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
   await app.ready()
   t.after(() => app.close())
 
