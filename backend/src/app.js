@@ -8,7 +8,7 @@ import statusRoutes from './routes/status.js'
 import { prisma as defaultPrisma } from './lib/prisma.js'
 import { verifyIdToken as defaultVerifyIdToken } from './lib/firebase.js'
 
-export function buildApp({ prisma = defaultPrisma, verifyIdToken = defaultVerifyIdToken } = {}) {
+export default function buildApp({ prisma = defaultPrisma, verifyIdToken = defaultVerifyIdToken } = {}) {
   const fastify = Fastify({
     logger: {
       transport: {
