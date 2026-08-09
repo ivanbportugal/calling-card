@@ -1,4 +1,5 @@
 import Fastify from 'fastify'
+import 'pino-pretty'
 import authPlugin from './plugins/auth.js'
 import profileRoutes from './routes/profile.js'
 import friendsRoutes from './routes/friends.js'
@@ -8,7 +9,13 @@ import { prisma as defaultPrisma } from './lib/prisma.js'
 import { verifyIdToken as defaultVerifyIdToken } from './lib/firebase.js'
 
 export function buildApp({ prisma = defaultPrisma, verifyIdToken = defaultVerifyIdToken } = {}) {
-  const fastify = Fastify({ logger: true })
+  const fastify = Fastify({
+    logger: {
+      transport: {
+        target: 'pino-pretty',
+      }
+    }
+  })
 
   fastify.decorate('prisma', prisma)
   fastify.decorate('verifyIdToken', verifyIdToken)
@@ -25,6 +32,7 @@ export function buildApp({ prisma = defaultPrisma, verifyIdToken = defaultVerify
     },
     { prefix: '/api' },
   )
+  fastify.log.debug("what's going on")
 
   return fastify
 }
