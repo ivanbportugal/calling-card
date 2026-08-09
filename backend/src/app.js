@@ -8,7 +8,7 @@ import statusRoutes from './routes/status.js'
 import { prisma as defaultPrisma } from './lib/prisma.js'
 import { verifyIdToken as defaultVerifyIdToken } from './lib/firebase.js'
 
-export default function buildApp({ prisma = defaultPrisma, verifyIdToken = defaultVerifyIdToken } = {}) {
+export async function buildApp({ prisma = defaultPrisma, verifyIdToken = defaultVerifyIdToken } = {}) {
   const fastify = Fastify({
     logger: {
       transport: {
@@ -35,4 +35,11 @@ export default function buildApp({ prisma = defaultPrisma, verifyIdToken = defau
   fastify.log.debug("what's going on")
 
   return fastify
+}
+
+// For serverless
+export default async function handler(req, res) {
+  const app = buildApp();
+  await app.ready();
+  app.server.emit('request', req, res);
 }
