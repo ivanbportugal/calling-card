@@ -1,9 +1,9 @@
 import { test, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildApp } from '../src/app.js'
-import { startTestDb } from '../test-support/testDb.js'
+import { buildApp } from '../src/app.ts'
+import { startTestDb } from '../test-support/testDb.ts'
 
-let testDb
+let testDb: Awaited<ReturnType<typeof startTestDb>>
 
 before(async () => {
   testDb = await startTestDb()
@@ -17,8 +17,8 @@ beforeEach(async () => {
   await testDb.reset()
 })
 
-function fakeVerifyIdToken(uidByToken) {
-  return async (token) => {
+function fakeVerifyIdToken(uidByToken: Record<string, string>) {
+  return async (token: string) => {
     const uid = uidByToken[token]
     if (!uid) throw new Error('invalid token')
     return { uid }
@@ -43,7 +43,7 @@ test('POST /api/status sets and updates the caller\'s status', async (t) => {
   assert.deepEqual(setGreen.json(), { color: 'GREEN' })
 
   const stored = await prisma.userStatus.findUnique({ where: { userId: ana.id } })
-  assert.equal(stored.color, 'GREEN')
+  assert.equal(stored?.color, 'GREEN')
 
   // setting again should update the existing row, not create a second one
   const setRed = await app.inject({
@@ -113,8 +113,8 @@ test('GET /api/friends includes each accepted friend\'s status, defaulting to nu
   assert.equal(res.statusCode, 200)
   const body = res.json()
 
-  const jessicaEntry = body.find((f) => f.displayName === 'Jessica')
-  const joEntry = body.find((f) => f.displayName === 'Jo')
+  const jessicaEntry = body.find((f: { displayName: string }) => f.displayName === 'Jessica')
+  const joEntry = body.find((f: { displayName: string }) => f.displayName === 'Jo')
 
   assert.equal(jessicaEntry.status, 'YELLOW')
   assert.equal(joEntry.status, null)

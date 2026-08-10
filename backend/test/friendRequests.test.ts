@@ -1,9 +1,9 @@
 import { test, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildApp } from '../src/app.js'
-import { startTestDb } from '../test-support/testDb.js'
+import { buildApp } from '../src/app.ts'
+import { startTestDb } from '../test-support/testDb.ts'
 
-let testDb
+let testDb: Awaited<ReturnType<typeof startTestDb>>
 
 before(async () => {
   testDb = await startTestDb()
@@ -17,15 +17,15 @@ beforeEach(async () => {
   await testDb.reset()
 })
 
-function fakeVerifyIdToken(uidByToken) {
-  return async (token) => {
+function fakeVerifyIdToken(uidByToken: Record<string, string>) {
+  return async (token: string) => {
     const uid = uidByToken[token]
     if (!uid) throw new Error('invalid token')
     return { uid }
   }
 }
 
-async function createUsers(prisma) {
+async function createUsers(prisma: Awaited<ReturnType<typeof startTestDb>>['prisma']) {
   const ana = await prisma.user.create({ data: { firebaseUid: 'ana-uid', displayName: 'Ana' } })
   const jessica = await prisma.user.create({ data: { firebaseUid: 'jessica-uid', displayName: 'Jessica' } })
   return { ana, jessica }
@@ -96,7 +96,7 @@ test('POST /api/friends/requests creates a pending friend request', async (t) =>
   assert.equal(body.status, 'PENDING')
 
   const stored = await prisma.friendship.findUnique({ where: { id: body.id } })
-  assert.equal(stored.status, 'PENDING')
+  assert.equal(stored?.status, 'PENDING')
 })
 
 test('POST /api/friends/requests rejects sending a request to yourself', async (t) => {
@@ -200,7 +200,7 @@ test('POST /api/friends/requests/:id/accept lets only the addressee accept, then
     headers: { authorization: 'Bearer ana-token' },
   })
   assert.deepEqual(
-    anaFriends.json().map((f) => f.displayName),
+    anaFriends.json().map((f: { displayName: string }) => f.displayName),
     ['Jessica'],
   )
 })
