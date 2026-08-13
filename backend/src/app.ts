@@ -1,4 +1,5 @@
 import Fastify from 'fastify'
+import fastifyStatic from '@fastify/static'
 import 'pino-pretty'
 import type { PrismaClient } from '@prisma/client'
 import type { IncomingMessage, ServerResponse } from 'node:http'
@@ -10,6 +11,7 @@ import friendRequestRoutes from './routes/friendRequests.ts'
 import statusRoutes from './routes/status.ts'
 import { prisma as defaultPrisma } from './lib/prisma.ts'
 import { verifyIdToken as defaultVerifyIdToken } from './lib/firebase.ts'
+import path from 'path'
 
 type BuildAppOptions = {
   prisma?: PrismaClient
@@ -40,7 +42,12 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
     },
     { prefix: '/api' },
   )
-  fastify.log.debug("what's going on")
+
+  fastify.register(fastifyStatic, {
+    root: path.join(process.cwd(), 'public'),
+  })
+
+  fastify.log.debug("Fastify setup complete")
 
   return fastify
 }
