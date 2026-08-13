@@ -30,7 +30,7 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
   fastify.decorate('prisma', prisma)
   fastify.decorate('verifyIdToken', verifyIdToken)
 
-  fastify.get('/health', async () => ({ status: 'ok' }))
+  fastify.get('/api/health', async () => ({ status: 'ok' }))
 
   fastify.register(
     async (instance) => {
