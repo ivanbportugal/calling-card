@@ -46,6 +46,9 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
   fastify.register(fastifyStatic, {
     root: path.join(process.cwd(), 'public'),
   })
+  fastify.get('/', async (request, reply) => {
+    return reply.sendFile('index.html');
+  });
 
   fastify.log.debug("Fastify setup complete")
 
