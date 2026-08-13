@@ -1,4 +1,7 @@
-function serializeUser(user) {
+import type { FastifyInstance } from 'fastify'
+import type { User } from '@prisma/client'
+
+function serializeUser(user: User) {
   return {
     id: user.id,
     displayName: user.displayName,
@@ -7,7 +10,7 @@ function serializeUser(user) {
   }
 }
 
-export default async function friendRequestRoutes(fastify) {
+export default async function friendRequestRoutes(fastify: FastifyInstance) {
   fastify.get('/friends/requests', async (request) => {
     const userId = request.user.id
 
@@ -36,7 +39,7 @@ export default async function friendRequestRoutes(fastify) {
     }
   })
 
-  fastify.post('/friends/requests', async (request, reply) => {
+  fastify.post<{ Body: { addresseeId?: string } }>('/friends/requests', async (request, reply) => {
     const { addresseeId } = request.body ?? {}
     const requesterId = request.user.id
 
@@ -73,7 +76,7 @@ export default async function friendRequestRoutes(fastify) {
     return reply.code(201).send(friendship)
   })
 
-  fastify.post('/friends/requests/:id/accept', async (request, reply) => {
+  fastify.post<{ Params: { id: string } }>('/friends/requests/:id/accept', async (request, reply) => {
     const { id } = request.params
     const userId = request.user.id
 

@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin'
 
 export default fp(async (fastify) => {
-  fastify.decorateRequest('user', null)
+  fastify.decorateRequest('user', null as never)
 
   fastify.addHook('onRequest', async (request, reply) => {
     const header = request.headers.authorization

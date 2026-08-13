@@ -1,4 +1,6 @@
-export default async function friendsRoutes(fastify) {
+import type { FastifyInstance } from 'fastify'
+
+export default async function friendsRoutes(fastify: FastifyInstance) {
   fastify.get('/friends', async (request) => {
     const userId = request.user.id
 

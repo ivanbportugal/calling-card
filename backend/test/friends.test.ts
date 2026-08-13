@@ -1,9 +1,9 @@
 import { test, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildApp } from '../src/app.js'
-import { startTestDb } from '../test-support/testDb.js'
+import { buildApp } from '../src/app.ts'
+import { startTestDb } from '../test-support/testDb.ts'
 
-let testDb
+let testDb: Awaited<ReturnType<typeof startTestDb>>
 
 before(async () => {
   testDb = await startTestDb()
@@ -17,8 +17,8 @@ beforeEach(async () => {
   await testDb.reset()
 })
 
-function fakeVerifyIdToken(uidByToken) {
-  return async (token) => {
+function fakeVerifyIdToken(uidByToken: Record<string, string>) {
+  return async (token: string) => {
     const uid = uidByToken[token]
     if (!uid) throw new Error('invalid token')
     return { uid }
@@ -58,11 +58,11 @@ test('GET /api/friends returns only the caller\'s accepted friends, never a frie
 
   const body = res.json()
   assert.deepEqual(
-    body.map((f) => f.displayName).sort(),
+    body.map((f: { displayName: string }) => f.displayName).sort(),
     ['Jessica', 'Jo'],
   )
-  assert.ok(!body.some((f) => f.displayName === 'Bethany'))
-  assert.ok(!body.some((f) => f.displayName === 'Stranger'))
+  assert.ok(!body.some((f: { displayName: string }) => f.displayName === 'Bethany'))
+  assert.ok(!body.some((f: { displayName: string }) => f.displayName === 'Stranger'))
 })
 
 test('GET /api/friends returns 401 without a Bearer token', async (t) => {

@@ -1,7 +1,7 @@
 import 'dotenv/config'
-import { buildApp } from './app.js'
+import { buildApp } from './app.ts'
 
-const app = buildApp()
+const app = await buildApp()
 
 if (process.env.ENVIRONMENT === 'local') {
   app.log.info("launching local env")

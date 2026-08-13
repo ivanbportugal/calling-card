@@ -1,4 +1,6 @@
-export default async function profileRoutes(fastify) {
+import type { FastifyInstance } from 'fastify'
+
+export default async function profileRoutes(fastify: FastifyInstance) {
   fastify.get('/profile', async (request, reply) => {
     const firebaseUid = request.user.firebaseUid
 
@@ -13,7 +15,7 @@ export default async function profileRoutes(fastify) {
     return user
   })
 
-  fastify.post('/profile', async (request, reply) => {
+  fastify.post<{ Body: { fcmToken?: string; displayName?: string; phoneNumber?: string } }>('/profile', async (request, reply) => {
     const firebaseUid = request.user.firebaseUid
 
     const user = await fastify.prisma.user.findUnique({
