@@ -1,8 +1,5 @@
 {
   "env": {
     "NODE_OPTIONS": "--experimental-require-module"
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
-  ]
+  }
 }
