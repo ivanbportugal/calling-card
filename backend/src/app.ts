@@ -46,16 +46,38 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
   )
 
   // debug output dir
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const publicDir = path.join(process.cwd(), 'public'); // or path.join(__dirname, 'public')
+  // const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  // const publicDir = path.join(process.cwd(), 'public'); // or path.join(__dirname, 'public')
 
-  console.log('CWD:', process.cwd());
+  // console.log('CWD:', process.cwd());
+  // console.log('__dirname:', __dirname);
+  // console.log('publicDir exists?', fs.existsSync(publicDir));
+  // if (fs.existsSync(publicDir)) {
+  //   console.log('public contents:', fs.readdirSync(publicDir));
+  //   console.log('index.html exists?', fs.existsSync(path.join(publicDir, 'index.html')));
+  // }
+
+  const candidates = [
+    path.join(process.cwd(), 'public'),
+    path.join(__dirname, 'public'),
+    path.join(__dirname, '../public'),
+    path.resolve('public'),
+  ];
+
+  console.log('=== STATIC DEBUG ===');
+  console.log('process.cwd():', process.cwd());
   console.log('__dirname:', __dirname);
-  console.log('publicDir exists?', fs.existsSync(publicDir));
-  if (fs.existsSync(publicDir)) {
-    console.log('public contents:', fs.readdirSync(publicDir));
-    console.log('index.html exists?', fs.existsSync(path.join(publicDir, 'index.html')));
+  console.log('__filename:', __filename);
+
+  for (const dir of candidates) {
+    console.log(`\nChecking: ${dir}`);
+    console.log('  exists:', fs.existsSync(dir));
+    if (fs.existsSync(dir)) {
+      console.log('  contents:', fs.readdirSync(dir));
+      console.log('  index.html:', fs.existsSync(path.join(dir, 'index.html')));
+    }
   }
+  console.log('=== END STATIC DEBUG ===');
 
   fastify.register(fastifyStatic, {
     root: path.join(process.cwd(), 'public'),
