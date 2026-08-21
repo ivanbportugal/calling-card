@@ -46,7 +46,8 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
   )
 
   // debug output dir
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
   // const publicDir = path.join(process.cwd(), 'public'); // or path.join(__dirname, 'public')
 
   // console.log('CWD:', process.cwd());
