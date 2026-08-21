@@ -1,4 +1,5 @@
 import Fastify from 'fastify'
+import fastifyStatic from '@fastify/static'
 import 'pino-pretty'
 import type { PrismaClient } from '@prisma/client'
 import type { IncomingMessage, ServerResponse } from 'node:http'
@@ -10,6 +11,8 @@ import friendRequestRoutes from './routes/friendRequests.ts'
 import statusRoutes from './routes/status.ts'
 import { prisma as defaultPrisma } from './lib/prisma.ts'
 import { verifyIdToken as defaultVerifyIdToken } from './lib/firebase.ts'
+import { fileURLToPath } from 'node:url';
+import path from 'path'
 
 type BuildAppOptions = {
   prisma?: PrismaClient
@@ -28,7 +31,7 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
   fastify.decorate('prisma', prisma)
   fastify.decorate('verifyIdToken', verifyIdToken)
 
-  fastify.get('/health', async () => ({ status: 'ok' }))
+  fastify.get('/api/health', async () => ({ status: 'ok' }))
 
   fastify.register(
     async (instance) => {
@@ -40,7 +43,20 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
     },
     { prefix: '/api' },
   )
-  fastify.log.debug("what's going on")
+
+  // public directory
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const publicDir = path.join(__dirname, '../public');
+
+  fastify.register(fastifyStatic, {
+    root: publicDir,
+  })
+  fastify.get('/', async (request, reply) => {
+    return reply.sendFile('index.html');
+  });
+
+  fastify.log.debug("Fastify setup complete")
 
   return fastify
 }
