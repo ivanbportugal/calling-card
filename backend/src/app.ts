@@ -80,8 +80,10 @@ export async function buildApp({ prisma = defaultPrisma, verifyIdToken = default
   }
   console.log('=== END STATIC DEBUG ===');
 
+  const publicDir = path.join(__dirname, '../public');
+
   fastify.register(fastifyStatic, {
-    root: path.join(process.cwd(), 'public'),
+    root: publicDir,
   })
   fastify.get('/', async (request, reply) => {
     return reply.sendFile('index.html');
