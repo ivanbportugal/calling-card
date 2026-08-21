@@ -10,7 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "postinstall": "prisma generate",
-    "vercel-build": "cd ../marketing && pnpm install && pnpm generate-routes && pnpm build && rm -rf ../backend/public && cp -r .vercel/output/static ../backend/public && cd ../backend && prisma generate && prisma migrate deploy",
+    "vercel-build": "cd ../marketing && pnpm install && pnpm generate-routes && pnpm build && cd ../backend && prisma generate && prisma migrate deploy",
     "pretest": "prisma generate",
     "test": "node --test test/**/*.test.ts"
   },
