@@ -23,11 +23,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final signedIn = ref.read(authStateChangesProvider).value != null;
       final onSignIn = state.matchedLocation == '/sign-in';
+      final onPublic = state.matchedLocation == '/';
 
       if (!signedIn && !onSignIn && state.matchedLocation == '/home') {
         return '/sign-in';
       }
-      if (signedIn && onSignIn) {
+      if (signedIn && (onSignIn || onPublic)) {
         return '/home';
       }
       return null;
