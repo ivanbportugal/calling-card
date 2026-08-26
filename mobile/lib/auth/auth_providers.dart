@@ -18,9 +18,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 class AuthRepository {
-  AuthRepository({required FirebaseAuth firebaseAuth, required GoogleSignIn googleSignIn})
-      : _firebaseAuth = firebaseAuth,
-        _googleSignIn = googleSignIn;
+  AuthRepository({required this._firebaseAuth, required this._googleSignIn});
 
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
