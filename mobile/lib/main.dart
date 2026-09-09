@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'auth/push_token_manager.dart';
 import 'routing/router.dart';
 
 void main() async {
@@ -10,6 +11,12 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
+
+  try {
+    await PushTokenManager().initialize();
+  } catch (error) {
+    debugPrint('Failed to initialize push token manager: $error');
+  }
 
   runApp(const ProviderScope(child: CallingCardApp()));
 }

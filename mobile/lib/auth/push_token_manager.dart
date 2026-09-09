@@ -1,17 +1,45 @@
+import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-// 1. Request notification permission (required on iOS)
-NotificationSettings settings = await FirebaseMessaging.instance.requestPermission();
+import '../config/api_config.dart';
 
-if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-// 2. Get the initial token
-String? token = await FirebaseMessaging.instance.getToken();
-if (token != null) {
-// await sendTokenToServer(token); // Send to your Node.js API
-}
+class PushTokenManager {
+  PushTokenManager({FirebaseMessaging? messaging, FirebaseAuth? auth, Dio? dio})
+      : _messaging = messaging ?? FirebaseMessaging.instance,
+        _auth = auth ?? FirebaseAuth.instance,
+        _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
-// 3. Listen for token rotations (important!)
-FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-// sendTokenToServer(newToken);
-});
+  final FirebaseMessaging _messaging;
+  final FirebaseAuth _auth;
+  final Dio _dio;
+
+  Future<void> initialize() async {
+    final settings = await _messaging.requestPermission();
+    if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+      return;
+    }
+
+    await Future.delayed(Duration(seconds: 1));
+
+    final token = await _messaging.getToken();
+    if (token != null) {
+      await sendTokenToServer(token);
+    }
+
+    _messaging.onTokenRefresh.listen(sendTokenToServer);
+  }
+
+  Future<void> sendTokenToServer(String fcmToken) async {
+    final idToken = await _auth.currentUser?.getIdToken();
+    await _dio.post(
+      '/profile',
+      data: {'fcmToken': fcmToken},
+      options: Options(
+        headers: {
+          if (idToken != null) 'Authorization': 'Bearer $idToken',
+        },
+      ),
+    );
+  }
 }
