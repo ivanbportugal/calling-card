@@ -20,6 +20,8 @@ class PushTokenManager {
       return;
     }
 
+    await Future.delayed(Duration(seconds: 1));
+
     final token = await _messaging.getToken();
     if (token != null) {
       await sendTokenToServer(token);
