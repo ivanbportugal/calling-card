@@ -5,6 +5,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'auth/push_token_manager.dart';
 import 'routing/router.dart';
+import 'theme/app_theme.dart';
+import 'theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +20,10 @@ void main() async {
     debugPrint('Failed to initialize push token manager: $error');
   }
 
-  runApp(const ProviderScope(child: CallingCardApp()));
+  final container = ProviderContainer();
+  await container.read(themeNotifier.notifier).load();
+
+  runApp(UncontrolledProviderScope(container: container, child: const CallingCardApp()));
 }
 
 class CallingCardApp extends ConsumerWidget {
@@ -27,10 +32,13 @@ class CallingCardApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeNotifier);
 
     return MaterialApp.router(
       title: 'Calling Card',
-      theme: ThemeData(colorSchemeSeed: Colors.deepPurple, useMaterial3: true),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

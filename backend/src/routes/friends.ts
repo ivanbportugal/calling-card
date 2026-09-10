@@ -27,4 +27,27 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
       }
     })
   })
+
+  fastify.delete<{ Params: { id: string } }>('/friends/:id', async (request, reply) => {
+    const userId = request.user.id
+    const { id: friendId } = request.params
+
+    const friendship = await fastify.prisma.friendship.findFirst({
+      where: {
+        status: 'ACCEPTED',
+        OR: [
+          { requesterId: userId, addresseeId: friendId },
+          { requesterId: friendId, addresseeId: userId },
+        ],
+      },
+    })
+
+    if (!friendship) {
+      return reply.code(404).send({ error: 'friendship not found' })
+    }
+
+    await fastify.prisma.friendship.delete({ where: { id: friendship.id } })
+
+    return reply.code(204).send()
+  })
 }

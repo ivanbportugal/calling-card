@@ -225,6 +225,105 @@ test('POST /api/friends/requests/:id/accept 409s when the request is already acc
   assert.equal(res.statusCode, 409)
 })
 
+test('DELETE /api/friends/requests/:id lets the recipient decline a pending request', async (t) => {
+  const { prisma } = testDb
+  const { ana, jessica } = await createUsers(prisma)
+  const request_ = await prisma.friendship.create({
+    data: { requesterId: ana.id, addresseeId: jessica.id, status: 'PENDING' },
+  })
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'jessica-token': jessica.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/api/friends/requests/${request_.id}`,
+    headers: { authorization: 'Bearer jessica-token' },
+  })
+
+  assert.equal(res.statusCode, 204)
+  assert.equal(await prisma.friendship.findUnique({ where: { id: request_.id } }), null)
+})
+
+test('DELETE /api/friends/requests/:id lets the requester cancel their own outgoing request', async (t) => {
+  const { prisma } = testDb
+  const { ana, jessica } = await createUsers(prisma)
+  const request_ = await prisma.friendship.create({
+    data: { requesterId: ana.id, addresseeId: jessica.id, status: 'PENDING' },
+  })
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/api/friends/requests/${request_.id}`,
+    headers: { authorization: 'Bearer ana-token' },
+  })
+
+  assert.equal(res.statusCode, 204)
+})
+
+test('DELETE /api/friends/requests/:id 403s for someone who is not part of the request', async (t) => {
+  const { prisma } = testDb
+  const { ana, jessica } = await createUsers(prisma)
+  const jo = await prisma.user.create({ data: { firebaseUid: 'jo-uid', displayName: 'Jo' } })
+  const request_ = await prisma.friendship.create({
+    data: { requesterId: ana.id, addresseeId: jessica.id, status: 'PENDING' },
+  })
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'jo-token': jo.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/api/friends/requests/${request_.id}`,
+    headers: { authorization: 'Bearer jo-token' },
+  })
+
+  assert.equal(res.statusCode, 403)
+})
+
+test('DELETE /api/friends/requests/:id 409s when the request is already accepted', async (t) => {
+  const { prisma } = testDb
+  const { ana, jessica } = await createUsers(prisma)
+  const request_ = await prisma.friendship.create({
+    data: { requesterId: ana.id, addresseeId: jessica.id, status: 'ACCEPTED' },
+  })
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/api/friends/requests/${request_.id}`,
+    headers: { authorization: 'Bearer ana-token' },
+  })
+
+  assert.equal(res.statusCode, 409)
+})
+
+test('DELETE /api/friends/requests/:id 404s for an unknown request id', async (t) => {
+  const { prisma } = testDb
+  const { ana } = await createUsers(prisma)
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'DELETE',
+    url: '/api/friends/requests/00000000-0000-0000-0000-000000000000',
+    headers: { authorization: 'Bearer ana-token' },
+  })
+
+  assert.equal(res.statusCode, 404)
+})
+
 test('POST /api/friends/requests/:id/accept 404s for an unknown request id', async (t) => {
   const { prisma } = testDb
   const { jessica } = await createUsers(prisma)

@@ -34,4 +34,13 @@ class AuthRepository {
     final credential = GoogleAuthProvider.credential(idToken: account.authentication.idToken);
     await _firebaseAuth.signInWithCredential(credential);
   }
+
+  Future<void> signOut() async {
+    await _firebaseAuth.signOut();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // Google session may already be cleared; Firebase sign-out is what matters.
+    }
+  }
 }
