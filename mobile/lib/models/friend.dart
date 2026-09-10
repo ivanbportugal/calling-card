@@ -1,16 +1,27 @@
 import '../auth/user.dart';
 
-/// Mock friend list for the UI — there is no friends API yet.
 class Friend {
-  final String name;
-  final StatusColor status;
+  final String id;
+  final String? displayName;
+  final String? email;
+  final String? photoUrl;
+  final StatusColor? status;
 
-  const Friend({required this.name, required this.status});
+  const Friend({
+    required this.id,
+    this.displayName,
+    this.email,
+    this.photoUrl,
+    this.status,
+  });
+
+  factory Friend.fromJson(Map<String, dynamic> json) {
+    return Friend(
+      id: json['id'] as String,
+      displayName: json['displayName'] as String?,
+      email: json['email'] as String?,
+      photoUrl: json['photoUrl'] as String?,
+      status: json['status'] != null ? StatusColor.values.byName(json['status'] as String) : null,
+    );
+  }
 }
-
-const mockFriends = [
-  Friend(name: 'Sarah', status: StatusColor.GREEN),
-  Friend(name: 'Mike', status: StatusColor.YELLOW),
-  Friend(name: 'Jessica', status: StatusColor.RED),
-  Friend(name: 'Alex', status: StatusColor.GREEN),
-];

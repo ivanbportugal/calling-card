@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../auth/user.dart';
+import '../../friends/friends_repository.dart';
 import '../../models/friend.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/status_color_extensions.dart';
 import '../../theme/theme_extensions.dart';
 import 'status_option.dart';
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends ConsumerWidget {
   const HomeContent({super.key, required this.user});
 
   final User user;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = context.colorScheme;
     final status = user.status?.color ?? StatusColor.RED;
+    final friends = ref.watch(friendsProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -86,32 +89,70 @@ class HomeContent extends StatelessWidget {
         const SizedBox(height: 24),
         Text('Friends', style: context.textTheme.titleMedium),
         const SizedBox(height: 12),
-        ...mockFriends.map(
-          (friend) => Card(
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: colorScheme.surfaceContainerHighest,
-                child: Text(friend.name[0]),
-              ),
-              title: Text(friend.name),
-              subtitle: Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: friend.status.resolve(colorScheme),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(friend.status.shortLabel),
-                ],
-              ),
-            ),
+        friends.when(
+          data: (friendList) => Column(
+            children: friendList
+                .map((friend) => _FriendTile(
+                      friend: friend,
+                      onRemove: () async {
+                        await ref.read(friendsRepositoryProvider).removeFriend(friend.id);
+                        ref.invalidate(friendsProvider);
+                      },
+                    ))
+                .toList(),
+          ),
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, _) => Text(
+            "Couldn't load your friends.",
+            style: context.textTheme.bodyMedium,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FriendTile extends StatelessWidget {
+  const _FriendTile({required this.friend, required this.onRemove});
+
+  final Friend friend;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final status = friend.status ?? StatusColor.RED;
+
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: colorScheme.surfaceContainerHighest,
+          child: Text((friend.displayName?.isNotEmpty ?? false) ? friend.displayName![0] : '?'),
+        ),
+        title: Text(friend.displayName ?? friend.email ?? 'Unknown'),
+        subtitle: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: status.resolve(colorScheme),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(status.shortLabel),
+          ],
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.person_remove_outlined),
+          tooltip: 'Remove friend',
+          onPressed: onRemove,
+        ),
+      ),
     );
   }
 }
