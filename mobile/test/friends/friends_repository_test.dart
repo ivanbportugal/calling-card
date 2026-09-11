@@ -76,6 +76,38 @@ void main() {
     expect(requests.outgoing, isEmpty);
   });
 
+  test('searchByEmail returns a matching friend', () async {
+    when(() => dio.get<dynamic>(any(), queryParameters: any(named: 'queryParameters'), options: any(named: 'options')))
+        .thenAnswer(
+      (_) async => Response(
+        requestOptions: RequestOptions(path: '/friends/search'),
+        statusCode: 200,
+        data: {'id': 'u2', 'displayName': 'Jessica', 'email': 'jessica@example.com', 'photoUrl': ''},
+      ),
+    );
+
+    final friend = await repository.searchByEmail('jessica@example.com');
+
+    expect(friend?.id, 'u2');
+    verify(() => dio.get<dynamic>(
+          '/friends/search',
+          queryParameters: {'email': 'jessica@example.com'},
+          options: any(named: 'options'),
+        )).called(1);
+  });
+
+  test('searchByEmail returns null when no user matches', () async {
+    when(() => dio.get<dynamic>(any(), queryParameters: any(named: 'queryParameters'), options: any(named: 'options')))
+        .thenThrow(DioException(
+      requestOptions: RequestOptions(path: '/friends/search'),
+      response: Response(requestOptions: RequestOptions(path: '/friends/search'), statusCode: 404),
+    ));
+
+    final friend = await repository.searchByEmail('nobody@example.com');
+
+    expect(friend, isNull);
+  });
+
   test('sendFriendRequest posts the addresseeId', () async {
     when(() => dio.post<dynamic>(any(), data: any(named: 'data'), options: any(named: 'options')))
         .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: '/friends/requests'), statusCode: 201));

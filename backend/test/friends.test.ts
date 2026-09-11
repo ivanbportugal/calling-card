@@ -65,6 +65,74 @@ test('GET /api/friends returns only the caller\'s accepted friends, never a frie
   assert.ok(!body.some((f: { displayName: string }) => f.displayName === 'Stranger'))
 })
 
+test('GET /api/friends/search finds a user by exact, case-insensitive email match', async (t) => {
+  const { prisma } = testDb
+  const ana = await prisma.user.create({ data: { firebaseUid: 'ana-uid', displayName: 'Ana', email: 'ana@example.com' } })
+  const jessica = await prisma.user.create({
+    data: { firebaseUid: 'jessica-uid', displayName: 'Jessica', email: 'Jessica@Example.com' },
+  })
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'GET',
+    url: '/api/friends/search?email=jessica@example.com',
+    headers: { authorization: 'Bearer ana-token' },
+  })
+
+  assert.equal(res.statusCode, 200)
+  const body = res.json()
+  assert.equal(body.id, jessica.id)
+  assert.equal(body.displayName, 'Jessica')
+  assert.equal(body.email, 'Jessica@Example.com')
+})
+
+test('GET /api/friends/search 404s when no user matches the email', async (t) => {
+  const { prisma } = testDb
+  const ana = await prisma.user.create({ data: { firebaseUid: 'ana-uid', displayName: 'Ana', email: 'ana@example.com' } })
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'GET',
+    url: '/api/friends/search?email=nobody@example.com',
+    headers: { authorization: 'Bearer ana-token' },
+  })
+
+  assert.equal(res.statusCode, 404)
+})
+
+test('GET /api/friends/search 400s when the email query param is missing', async (t) => {
+  const { prisma } = testDb
+  const ana = await prisma.user.create({ data: { firebaseUid: 'ana-uid', displayName: 'Ana', email: 'ana@example.com' } })
+
+  const app = await buildApp({ prisma, verifyIdToken: fakeVerifyIdToken({ 'ana-token': ana.firebaseUid }) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({
+    method: 'GET',
+    url: '/api/friends/search',
+    headers: { authorization: 'Bearer ana-token' },
+  })
+
+  assert.equal(res.statusCode, 400)
+})
+
+test('GET /api/friends/search requires a Bearer token', async (t) => {
+  const app = await buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
+  await app.ready()
+  t.after(() => app.close())
+
+  const res = await app.inject({ method: 'GET', url: '/api/friends/search?email=ana@example.com' })
+
+  assert.equal(res.statusCode, 401)
+})
+
 test('GET /api/friends returns 401 without a Bearer token', async (t) => {
   const app = await buildApp({ prisma: testDb.prisma, verifyIdToken: fakeVerifyIdToken({}) })
   await app.ready()

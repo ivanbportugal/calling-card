@@ -47,6 +47,20 @@ class FriendsRepository {
     return FriendRequests.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<Friend?> searchByEmail(String email) async {
+    try {
+      final response = await _dio.get(
+        '/friends/search',
+        queryParameters: {'email': email},
+        options: await _authOptions(),
+      );
+      return Friend.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
   Future<void> sendFriendRequest(String addresseeId) async {
     await _dio.post(
       '/friends/requests',
