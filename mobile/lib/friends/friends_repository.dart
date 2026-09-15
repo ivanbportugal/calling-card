@@ -1,13 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../config/api_config.dart';
+import '../config/dio_client.dart';
 import '../models/friend.dart';
 import '../models/friend_request.dart';
 
 final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
-  return FriendsRepository(auth: FirebaseAuth.instance);
+  return FriendsRepository(dio: ref.watch(dioProvider));
 });
 
 final friendsProvider = FutureProvider<List<Friend>>((ref) {
@@ -19,31 +18,19 @@ final friendRequestsProvider = FutureProvider<FriendRequests>((ref) {
 });
 
 class FriendsRepository {
-  FriendsRepository({FirebaseAuth? auth, Dio? dio})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+  FriendsRepository({Dio? dio}) : _dio = dio ?? createDio();
 
-  final FirebaseAuth _auth;
   final Dio _dio;
 
-  Future<Options> _authOptions() async {
-    final idToken = await _auth.currentUser?.getIdToken();
-    return Options(
-      headers: {
-        if (idToken != null) 'Authorization': 'Bearer $idToken',
-      },
-    );
-  }
-
   Future<List<Friend>> getFriends() async {
-    final response = await _dio.get('/friends', options: await _authOptions());
+    final response = await _dio.get('/friends');
     return (response.data as List<dynamic>)
         .map((e) => Friend.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<FriendRequests> getFriendRequests() async {
-    final response = await _dio.get('/friends/requests', options: await _authOptions());
+    final response = await _dio.get('/friends/requests');
     return FriendRequests.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -52,7 +39,6 @@ class FriendsRepository {
       final response = await _dio.get(
         '/friends/search',
         queryParameters: {'email': email},
-        options: await _authOptions(),
       );
       return Friend.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (error) {
@@ -62,22 +48,18 @@ class FriendsRepository {
   }
 
   Future<void> sendFriendRequest(String addresseeId) async {
-    await _dio.post(
-      '/friends/requests',
-      data: {'addresseeId': addresseeId},
-      options: await _authOptions(),
-    );
+    await _dio.post('/friends/requests', data: {'addresseeId': addresseeId});
   }
 
   Future<void> acceptFriendRequest(String requestId) async {
-    await _dio.post('/friends/requests/$requestId/accept', options: await _authOptions());
+    await _dio.post('/friends/requests/$requestId/accept');
   }
 
   Future<void> declineFriendRequest(String requestId) async {
-    await _dio.delete('/friends/requests/$requestId', options: await _authOptions());
+    await _dio.delete('/friends/requests/$requestId');
   }
 
   Future<void> removeFriend(String friendId) async {
-    await _dio.delete('/friends/$friendId', options: await _authOptions());
+    await _dio.delete('/friends/$friendId');
   }
 }
