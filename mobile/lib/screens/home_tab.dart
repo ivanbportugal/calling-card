@@ -10,16 +10,18 @@ class HomeTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileProvider);
+    final profile = ref.watch(userProfileProvider);
+    final user = profile.value;
+    final greeting = user?.displayName != null ? 'Hey ${user!.displayName}' : 'Home';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(title: Text(greeting)),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(profileProvider.future),
+        onRefresh: () => ref.refresh(userProfileProvider.future),
         child: profile.when(
           data: (user) => HomeContent(user: user),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => ErrorState(onRetry: () => ref.invalidate(profileProvider)),
+          error: (error, _) => ErrorState(onRetry: () => ref.invalidate(userProfileProvider)),
         ),
       ),
     );

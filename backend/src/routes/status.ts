@@ -4,6 +4,17 @@ import type { StatusColor } from '@prisma/client'
 const VALID_COLORS = new Set<StatusColor>(['GREEN', 'YELLOW', 'RED'])
 
 export default async function statusRoutes(fastify: FastifyInstance) {
+  fastify.get('/status', async (request, reply) => {
+    const status = await fastify.prisma.userStatus.findUnique({
+      where: { userId: request.user.id },
+    })
+
+    if (!status) {
+      return reply.code(404).send({ error: 'user status not found' })
+    }
+    return { color: status.color }
+  })
+
   fastify.post<{ Body: { color?: StatusColor } }>('/status', async (request, reply) => {
     const { color } = request.body ?? {}
 

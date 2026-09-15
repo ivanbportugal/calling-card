@@ -2,9 +2,9 @@ class User {
   final String id;
   final String firebaseUid;
   final String email;
-  final String phoneNumber;
-  final String displayName;
-  final String photoUrl;
+  final String? phoneNumber;
+  final String? displayName;
+  final String? photoUrl;
   final bool notificationsEnabled;
   final UserStatus? status;
 
@@ -24,9 +24,9 @@ class User {
       id: json['id'] as String,
       firebaseUid: json['firebaseUid'] as String,
       email: json['email'] as String,
-      phoneNumber: json['phoneNumber'] as String,
-      displayName: json['displayName'] as String,
-      photoUrl: json['photoUrl'] as String,
+      phoneNumber: json['phoneNumber'] as String?,
+      displayName: json['displayName'] as String?,
+      photoUrl: json['photoUrl'] as String?,
       notificationsEnabled: json['notificationsEnabled'] as bool,
       status: json['status'] != null
           ? UserStatus.fromJson(json['status'] as Map<String, dynamic>)

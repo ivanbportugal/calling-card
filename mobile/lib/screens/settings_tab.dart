@@ -1,3 +1,5 @@
+import 'package:calling_card/screens/settings/edit_profile_dialog.dart';
+import 'package:calling_card/screens/settings/theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -15,7 +17,7 @@ class SettingsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileProvider);
+    final profile = ref.watch(userProfileProvider);
     final friends = ref.watch(friendsProvider);
     final requests = ref.watch(friendRequestsProvider);
     final colorScheme = context.colorScheme;
@@ -35,12 +37,14 @@ class SettingsTab extends ConsumerWidget {
                         CircleAvatar(
                           radius: 32,
                           backgroundColor: colorScheme.surfaceContainerHighest,
-                          backgroundImage: user.photoUrl.isNotEmpty
-                              ? NetworkImage(user.photoUrl)
+                          backgroundImage: user.photoUrl != null
+                              ? NetworkImage(user.photoUrl!)
                               : null,
-                          child: user.photoUrl.isEmpty
+                          child: user.photoUrl != null
                               ? Text(
-                                  user.displayName.isNotEmpty ? user.displayName[0] : '?',
+                                  user.displayName != null
+                                      ? user.displayName![0]
+                                      : '?',
                                   style: context.textTheme.headlineSmall,
                                 )
                               : null,
@@ -50,7 +54,12 @@ class SettingsTab extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(user.displayName, style: context.textTheme.titleLarge),
+                              Text(
+                                user.displayName != null
+                                    ? user.displayName!
+                                    : '',
+                                style: context.textTheme.titleLarge,
+                              ),
                               Text(
                                 user.email,
                                 style: context.textTheme.bodyMedium?.copyWith(
@@ -60,13 +69,28 @@ class SettingsTab extends ConsumerWidget {
                             ],
                           ),
                         ),
+                        IconButton(
+                          onPressed: () {
+                            showEditProfileDialog(context, ref);
+                          },
+                          icon: Icon(Icons.edit),
+                        ),
                       ],
                     ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (_, _) => Text(
                       "Couldn't load your name.",
                       style: context.textTheme.bodyLarge,
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Theme', style: context.textTheme.titleMedium),
+                      ThemeToggle(),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -95,39 +119,55 @@ class SettingsTab extends ConsumerWidget {
                                   (friend) => Card(
                                     child: ListTile(
                                       leading: CircleAvatar(
-                                        backgroundColor: colorScheme.surfaceContainerHighest,
+                                        backgroundColor:
+                                            colorScheme.surfaceContainerHighest,
                                         child: Text(
-                                          (friend.displayName?.isNotEmpty ?? false)
+                                          (friend.displayName?.isNotEmpty ??
+                                                  false)
                                               ? friend.displayName![0]
                                               : '?',
                                         ),
                                       ),
-                                      title: Text(friend.displayName ?? friend.email ?? 'Unknown'),
+                                      title: Text(
+                                        friend.displayName ??
+                                            friend.email ??
+                                            'Unknown',
+                                      ),
                                       subtitle: Row(
                                         children: [
                                           Container(
                                             width: 8,
                                             height: 8,
                                             decoration: BoxDecoration(
-                                              color: (friend.status ?? StatusColor.RED).resolve(colorScheme),
+                                              color:
+                                                  (friend.status ??
+                                                          StatusColor.RED)
+                                                      .resolve(colorScheme),
                                               shape: BoxShape.circle,
                                             ),
                                           ),
                                           const SizedBox(width: 6),
-                                          Text((friend.status ?? StatusColor.RED).shortLabel),
+                                          Text(
+                                            (friend.status ?? StatusColor.RED)
+                                                .shortLabel,
+                                          ),
                                         ],
                                       ),
                                       trailing: IconButton(
-                                        icon: const Icon(Icons.person_remove_outlined),
+                                        icon: const Icon(
+                                          Icons.person_remove_outlined,
+                                        ),
                                         tooltip: 'Remove friend',
-                                        onPressed: () => _removeFriend(context, ref, friend),
+                                        onPressed: () =>
+                                            _removeFriend(context, ref, friend),
                                       ),
                                     ),
                                   ),
                                 )
                                 .toList(),
                           ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (_, _) => Text(
                       "Couldn't load your friends.",
                       style: context.textTheme.bodyLarge,
@@ -135,19 +175,27 @@ class SettingsTab extends ConsumerWidget {
                   ),
                   requests.when(
                     data: (friendRequests) {
-                      if (friendRequests.incoming.isEmpty && friendRequests.outgoing.isEmpty) {
+                      if (friendRequests.incoming.isEmpty &&
+                          friendRequests.outgoing.isEmpty) {
                         return const SizedBox.shrink();
                       }
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 24),
-                          Text('Friend requests', style: context.textTheme.titleMedium),
+                          Text(
+                            'Friend requests',
+                            style: context.textTheme.titleMedium,
+                          ),
                           const SizedBox(height: 12),
                           ...friendRequests.incoming.map(
                             (request) => Card(
                               child: ListTile(
-                                title: Text(request.user.displayName ?? request.user.email ?? 'Unknown'),
+                                title: Text(
+                                  request.user.displayName ??
+                                      request.user.email ??
+                                      'Unknown',
+                                ),
                                 subtitle: const Text('wants to be friends'),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -155,12 +203,17 @@ class SettingsTab extends ConsumerWidget {
                                     IconButton(
                                       icon: const Icon(Icons.check),
                                       tooltip: 'Accept',
-                                      onPressed: () => _acceptRequest(context, ref, request),
+                                      onPressed: () =>
+                                          _acceptRequest(context, ref, request),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.close),
                                       tooltip: 'Decline',
-                                      onPressed: () => _declineRequest(context, ref, request),
+                                      onPressed: () => _declineRequest(
+                                        context,
+                                        ref,
+                                        request,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -170,12 +223,17 @@ class SettingsTab extends ConsumerWidget {
                           ...friendRequests.outgoing.map(
                             (request) => Card(
                               child: ListTile(
-                                title: Text(request.user.displayName ?? request.user.email ?? 'Unknown'),
+                                title: Text(
+                                  request.user.displayName ??
+                                      request.user.email ??
+                                      'Unknown',
+                                ),
                                 subtitle: const Text('request sent'),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.close),
                                   tooltip: 'Cancel request',
-                                  onPressed: () => _declineRequest(context, ref, request),
+                                  onPressed: () =>
+                                      _declineRequest(context, ref, request),
                                 ),
                               ),
                             ),
@@ -222,7 +280,11 @@ class SettingsTab extends ConsumerWidget {
     }
   }
 
-  Future<void> _removeFriend(BuildContext context, WidgetRef ref, Friend friend) async {
+  Future<void> _removeFriend(
+    BuildContext context,
+    WidgetRef ref,
+    Friend friend,
+  ) async {
     try {
       await ref.read(friendsRepositoryProvider).removeFriend(friend.id);
       ref.invalidate(friendsProvider);
@@ -235,7 +297,11 @@ class SettingsTab extends ConsumerWidget {
     }
   }
 
-  Future<void> _acceptRequest(BuildContext context, WidgetRef ref, FriendRequest request) async {
+  Future<void> _acceptRequest(
+    BuildContext context,
+    WidgetRef ref,
+    FriendRequest request,
+  ) async {
     try {
       await ref.read(friendsRepositoryProvider).acceptFriendRequest(request.id);
       ref.invalidate(friendRequestsProvider);
@@ -249,9 +315,15 @@ class SettingsTab extends ConsumerWidget {
     }
   }
 
-  Future<void> _declineRequest(BuildContext context, WidgetRef ref, FriendRequest request) async {
+  Future<void> _declineRequest(
+    BuildContext context,
+    WidgetRef ref,
+    FriendRequest request,
+  ) async {
     try {
-      await ref.read(friendsRepositoryProvider).declineFriendRequest(request.id);
+      await ref
+          .read(friendsRepositoryProvider)
+          .declineFriendRequest(request.id);
       ref.invalidate(friendRequestsProvider);
     } catch (_) {
       if (context.mounted) {
@@ -294,7 +366,9 @@ class _AddFriendDialogState extends ConsumerState<_AddFriendDialog> {
     });
 
     try {
-      final friend = await ref.read(friendsRepositoryProvider).searchByEmail(email);
+      final friend = await ref
+          .read(friendsRepositoryProvider)
+          .searchByEmail(email);
       setState(() {
         _result = friend;
         _status = friend != null ? _SearchStatus.found : _SearchStatus.notFound;
@@ -338,20 +412,29 @@ class _AddFriendDialogState extends ConsumerState<_AddFriendDialog> {
           const SizedBox(height: 16),
           switch (_status) {
             _SearchStatus.idle => const SizedBox.shrink(),
-            _SearchStatus.loading => const Center(child: CircularProgressIndicator()),
-            _SearchStatus.notFound => const Text('No user found with that email.'),
-            _SearchStatus.error => const Text("Something went wrong. Try again."),
+            _SearchStatus.loading => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            _SearchStatus.notFound => const Text(
+              'No user found with that email.',
+            ),
+            _SearchStatus.error => const Text(
+              "Something went wrong. Try again.",
+            ),
             _SearchStatus.found => ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-                title: Text(_result!.displayName ?? _result!.email ?? 'Unknown'),
-                subtitle: Text(_result!.email ?? ''),
-              ),
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+              title: Text(_result!.displayName ?? _result!.email ?? 'Unknown'),
+              subtitle: Text(_result!.email ?? ''),
+            ),
           },
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
         if (_status == _SearchStatus.found)
           TextButton(
             onPressed: _sending ? null : _sendRequest,

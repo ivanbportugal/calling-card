@@ -7,6 +7,9 @@ export default async function profileRoutes(fastify: FastifyInstance) {
     const user = await fastify.prisma.user.findUnique({
       where: {
         firebaseUid
+      },
+      include: {
+        status: true
       }
     })
     if (!user) {
