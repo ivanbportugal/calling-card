@@ -1,17 +1,14 @@
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-import '../config/api_config.dart';
+import '../config/dio_client.dart';
 
 class PushTokenManager {
-  PushTokenManager({FirebaseMessaging? messaging, FirebaseAuth? auth, Dio? dio})
+  PushTokenManager({FirebaseMessaging? messaging, Dio? dio})
       : _messaging = messaging ?? FirebaseMessaging.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+        _dio = dio ?? createDio();
 
   final FirebaseMessaging _messaging;
-  final FirebaseAuth _auth;
   final Dio _dio;
 
   Future<void> initialize() async {
@@ -31,15 +28,6 @@ class PushTokenManager {
   }
 
   Future<void> sendTokenToServer(String fcmToken) async {
-    final idToken = await _auth.currentUser?.getIdToken();
-    await _dio.post(
-      '/profile',
-      data: {'fcmToken': fcmToken},
-      options: Options(
-        headers: {
-          if (idToken != null) 'Authorization': 'Bearer $idToken',
-        },
-      ),
-    );
+    await _dio.post('/profile', data: {'fcmToken': fcmToken});
   }
 }

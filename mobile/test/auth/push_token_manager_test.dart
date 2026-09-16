@@ -1,15 +1,10 @@
 import 'package:calling_card/auth/push_token_manager.dart';
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockFirebaseMessaging extends Mock implements FirebaseMessaging {}
-
-class MockFirebaseAuth extends Mock implements FirebaseAuth {}
-
-class MockUser extends Mock implements User {}
 
 class MockDio extends Mock implements Dio {}
 
@@ -45,29 +40,15 @@ const _deniedSettings = NotificationSettings(
 
 void main() {
   late MockFirebaseMessaging messaging;
-  late MockFirebaseAuth auth;
-  late MockUser user;
   late MockDio dio;
   late PushTokenManager manager;
 
-  setUpAll(() {
-    registerFallbackValue(Options());
-  });
-
   setUp(() {
     messaging = MockFirebaseMessaging();
-    auth = MockFirebaseAuth();
-    user = MockUser();
     dio = MockDio();
-    manager = PushTokenManager(messaging: messaging, auth: auth, dio: dio);
+    manager = PushTokenManager(messaging: messaging, dio: dio);
 
-    when(() => auth.currentUser).thenReturn(user);
-    when(() => user.getIdToken()).thenAnswer((_) async => 'id-token-123');
-    when(() => dio.post<dynamic>(
-          any(),
-          data: any(named: 'data'),
-          options: any(named: 'options'),
-        )).thenAnswer(
+    when(() => dio.post<dynamic>(any(), data: any(named: 'data'))).thenAnswer(
       (_) async => Response(
         requestOptions: RequestOptions(path: '/profile'),
         statusCode: 200,
@@ -75,22 +56,14 @@ void main() {
     );
   });
 
-  test('sends the fcm token to /profile with a bearer auth header', () async {
+  test('sends the fcm token to /profile', () async {
     when(() => messaging.requestPermission()).thenAnswer((_) async => _authorizedSettings);
     when(() => messaging.getToken()).thenAnswer((_) async => 'fcm-token-abc');
     when(() => messaging.onTokenRefresh).thenAnswer((_) => const Stream<String>.empty());
 
     await manager.initialize();
 
-    final captured = verify(() => dio.post<dynamic>(
-          '/profile',
-          data: captureAny(named: 'data'),
-          options: captureAny(named: 'options'),
-        )).captured;
-
-    expect(captured[0], {'fcmToken': 'fcm-token-abc'});
-    final options = captured[1] as Options;
-    expect(options.headers?['Authorization'], 'Bearer id-token-123');
+    verify(() => dio.post<dynamic>('/profile', data: {'fcmToken': 'fcm-token-abc'})).called(1);
   });
 
   test('does not send a token when permission is denied', () async {
@@ -100,11 +73,7 @@ void main() {
     await manager.initialize();
 
     verifyNever(() => messaging.getToken());
-    verifyNever(() => dio.post<dynamic>(
-          any(),
-          data: any(named: 'data'),
-          options: any(named: 'options'),
-        ));
+    verifyNever(() => dio.post<dynamic>(any(), data: any(named: 'data')));
   });
 
   test('does not send when no token is available', () async {
@@ -114,11 +83,7 @@ void main() {
 
     await manager.initialize();
 
-    verifyNever(() => dio.post<dynamic>(
-          any(),
-          data: any(named: 'data'),
-          options: any(named: 'options'),
-        ));
+    verifyNever(() => dio.post<dynamic>(any(), data: any(named: 'data')));
   });
 
   test('sends refreshed token when onTokenRefresh fires', () async {
@@ -129,26 +94,6 @@ void main() {
     await manager.initialize();
     await Future<void>.delayed(Duration.zero);
 
-    verify(() => dio.post<dynamic>(
-          '/profile',
-          data: {'fcmToken': 'fcm-token-refreshed'},
-          options: any(named: 'options'),
-        )).called(1);
-  });
-
-  test('omits the Authorization header when there is no signed-in user', () async {
-    when(() => auth.currentUser).thenReturn(null);
-
-    await manager.sendTokenToServer('fcm-token-xyz');
-
-    final captured = verify(() => dio.post<dynamic>(
-          '/profile',
-          data: captureAny(named: 'data'),
-          options: captureAny(named: 'options'),
-        )).captured;
-
-    expect(captured[0], {'fcmToken': 'fcm-token-xyz'});
-    final options = captured[1] as Options;
-    expect(options.headers?.containsKey('Authorization'), isFalse);
+    verify(() => dio.post<dynamic>('/profile', data: {'fcmToken': 'fcm-token-refreshed'})).called(1);
   });
 }
