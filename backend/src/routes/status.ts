@@ -28,6 +28,16 @@ export default async function statusRoutes(fastify: FastifyInstance) {
       create: { userId: request.user.id, color },
     })
 
+    const user = await fastify.prisma.user.findFirst({
+      where: {
+        id: request.user.id,
+      },
+      include: {
+        receivedFriendRequests: true,
+        sentFriendRequests: true
+      }
+    })
+
     return { color: status.color }
   })
 }
