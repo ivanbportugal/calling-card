@@ -1,7 +1,33 @@
 import type { FastifyInstance } from 'fastify'
-import type { StatusColor } from '@prisma/client'
+import type { PrismaClient, StatusColor } from '@prisma/client'
+import { sendStatusUpdate } from '../lib/messaging.ts'
 
 const VALID_COLORS = new Set<StatusColor>(['GREEN', 'YELLOW', 'RED'])
+
+async function notifyFriends(
+  prisma: PrismaClient,
+  userId: string,
+  displayName: string | null,
+  color: StatusColor,
+) {
+  const friendships = await prisma.friendship.findMany({
+    where: {
+      status: 'ACCEPTED',
+      OR: [{ requesterId: userId }, { addresseeId: userId }],
+    },
+    include: {
+      requester: { select: { id: true, fcmToken: true } },
+      addressee: { select: { id: true, fcmToken: true } },
+    },
+  })
+
+  const fcmTokens = friendships
+    .map((f) => (f.requesterId === userId ? f.addressee : f.requester))
+    .map((u) => u.fcmToken)
+    .filter((t): t is string => !!t)
+
+  await sendStatusUpdate(fcmTokens, color, displayName)
+}
 
 export default async function statusRoutes(fastify: FastifyInstance) {
   fastify.get('/status', async (request, reply) => {
@@ -28,15 +54,7 @@ export default async function statusRoutes(fastify: FastifyInstance) {
       create: { userId: request.user.id, color },
     })
 
-    const user = await fastify.prisma.user.findFirst({
-      where: {
-        id: request.user.id,
-      },
-      include: {
-        receivedFriendRequests: true,
-        sentFriendRequests: true
-      }
-    })
+    await notifyFriends(fastify.prisma, request.user.id, request.user.displayName, status.color)
 
     return { color: status.color }
   })
