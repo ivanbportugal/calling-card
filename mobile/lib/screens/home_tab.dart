@@ -1,3 +1,4 @@
+import 'package:calling_card/friends/friends_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -17,7 +18,14 @@ class HomeTab extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(greeting)),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(userProfileProvider.future),
+        onRefresh: () async {
+          await Future.wait([
+            ref.refresh(userProfileProvider.future),
+            ref.refresh(friendsProvider.future),
+            ref.refresh(friendRequestsProvider.future),
+          ]);
+        },
+        // onRefresh: () => ref.refresh(userProfileProvider.future),
         child: profile.when(
           data: (user) => HomeContent(user: user),
           loading: () => const Center(child: CircularProgressIndicator()),
