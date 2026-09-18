@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../friends/friends_repository.dart';
 import '../../models/friend.dart';
+import 'qr_scan_screen.dart';
 
 Future<void> showAddFriendDialog(BuildContext context, WidgetRef ref) async {
   final sent = await showDialog<bool>(
@@ -34,6 +35,17 @@ class _AddFriendDialogState extends ConsumerState<_AddFriendDialog> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanQr() async {
+    final email = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const QrScanScreen()),
+    );
+    if (email == null) return;
+
+    _controller.text = email;
+    await _search();
   }
 
   Future<void> _search() async {
@@ -77,7 +89,17 @@ class _AddFriendDialogState extends ConsumerState<_AddFriendDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Add a friend'),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Add a friend'),
+          IconButton(
+            onPressed: _scanQr,
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: 'Scan QR code',
+          ),
+        ],
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
