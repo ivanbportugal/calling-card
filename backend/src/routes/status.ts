@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyBaseLogger, FastifyInstance } from 'fastify'
 import type { PrismaClient, StatusColor } from '@prisma/client'
 import { sendStatusUpdate } from '../lib/messaging.ts'
 
@@ -9,6 +9,7 @@ async function notifyFriends(
   userId: string,
   displayName: string | null,
   color: StatusColor,
+  fastify: FastifyInstance
 ) {
   const friendships = await prisma.friendship.findMany({
     where: {
@@ -26,7 +27,7 @@ async function notifyFriends(
     .map((u) => u.fcmToken)
     .filter((t): t is string => !!t)
 
-  await sendStatusUpdate(fcmTokens, color, displayName)
+  await sendStatusUpdate(fcmTokens, color, displayName, fastify)
 }
 
 export default async function statusRoutes(fastify: FastifyInstance) {
@@ -54,7 +55,7 @@ export default async function statusRoutes(fastify: FastifyInstance) {
       create: { userId: request.user.id, color },
     })
 
-    await notifyFriends(fastify.prisma, request.user.id, request.user.displayName, status.color)
+    await notifyFriends(fastify.prisma, request.user.id, request.user.displayName, status.color, fastify)
 
     return { color: status.color }
   })
