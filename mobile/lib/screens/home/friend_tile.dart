@@ -40,9 +40,34 @@ class FriendTile extends StatelessWidget {
         trailing: IconButton(
           icon: const Icon(Icons.person_remove_outlined),
           tooltip: 'Remove friend',
-          onPressed: onRemove,
+          onPressed: () => _confirmRemove(context),
         ),
       ),
     );
+  }
+
+  Future<void> _confirmRemove(BuildContext context) async {
+    final name = friend.displayName ?? friend.email ?? 'this friend';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove friend?'),
+        content: Text('Remove $name from your friends list?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed ?? false) {
+      onRemove();
+    }
   }
 }
