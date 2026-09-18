@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="calling_card"
+        android:label="Calling Card"
         android:name="${applicationName}"
         android:networkSecurityConfig="@xml/android_network_security"
         android:icon="@mipmap/launcher_icon">
