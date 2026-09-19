@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../auth/user.dart';
 import '../../theme/theme_extensions.dart';
 import 'edit_profile_dialog.dart';
+import 'my_qr_dialog.dart';
 
 class ProfileHeader extends ConsumerWidget {
   const ProfileHeader({super.key, required this.profile});
@@ -47,6 +48,10 @@ class ProfileHeader extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            onPressed: () => showMyQrDialog(context, user.email, colorScheme),
+            icon: const Icon(Icons.qr_code),
           ),
           IconButton(
             onPressed: () {
