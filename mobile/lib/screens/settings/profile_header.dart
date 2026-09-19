@@ -50,7 +50,7 @@ class ProfileHeader extends ConsumerWidget {
             ),
           ),
           IconButton(
-            onPressed: () => showMyQrDialog(context, user.email),
+            onPressed: () => showMyQrDialog(context, user.email, colorScheme),
             icon: const Icon(Icons.qr_code),
           ),
           IconButton(

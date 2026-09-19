@@ -3,7 +3,12 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../friends/qr_email_codec.dart';
 
-Future<void> showMyQrDialog(BuildContext context, String email) {
+Future<void> showMyQrDialog(
+  BuildContext context,
+  String email,
+  ColorScheme colorScheme,
+) {
+  final foregroundColor = colorScheme.inverseSurface;
   return showDialog(
     context: context,
     builder: (_) => AlertDialog(
@@ -11,7 +16,16 @@ Future<void> showMyQrDialog(BuildContext context, String email) {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          QrImageView(data: encodeEmailQr(email), size: 220),
+          SizedBox(
+            width: 220,
+            height: 220,
+            child: QrImageView(
+              data: encodeEmailQr(email),
+              eyeStyle: QrEyeStyle(color: foregroundColor),
+              dataModuleStyle: QrDataModuleStyle(color: foregroundColor),
+              size: 220,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(email, textAlign: TextAlign.center),
         ],
